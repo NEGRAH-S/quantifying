@@ -7,9 +7,10 @@ import requests
 import re
 import xml.etree.ElementTree as ET
 
-ACCESS_TOKEN = "24edf58088875347463ba7fc13f5ffd25c1b5d72"
+import query_secrets
+
 ENDPOINT = "https://www.oercommons.org/api/search"
-BASE_URL = ENDPOINT + "?token=" + ACCESS_TOKEN
+BASE_URL = ENDPOINT + "?token=" + query_secrets.ACCESS_TOKEN
 
 def works_per_license():
     licenses = [

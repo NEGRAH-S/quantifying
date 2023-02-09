@@ -4,6 +4,7 @@ This file is dedicated to obtain a .csv record report for Open Education Resourc
 """
 
 import requests
+import re
 import xml.etree.ElementTree as ET
 
 ACCESS_TOKEN = "24edf58088875347463ba7fc13f5ffd25c1b5d72"
@@ -22,13 +23,19 @@ def works_per_license():
         "CC-BY-ND" # no longer available?
     ]
     
+    
 
 def test_access():
     """Tests endpoint by filtering under cc-by license."""
     response = requests.get(BASE_URL + '&f.license=cc-by&batch_size=10')
     print(response.status_code)
     with open('data.xml', 'w') as f:
-        f.write(response.text)
+        print(type(response.text))
+        f.write(re.sub("&\w*;", "", response.text))
+    root = ET.fromstring(re.sub("&\w*;", "", response.text))
+    license_total = root.iter('oersearchresults')
+    print(license_total)
+
 
 def main():
     test_access()

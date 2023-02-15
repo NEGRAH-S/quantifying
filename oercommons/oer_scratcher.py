@@ -10,25 +10,33 @@ import xml.etree.ElementTree as ET
 import query_secrets
 
 ENDPOINT = "https://www.oercommons.org/api/search"
-BASE_URL = f"{ENDPOINT}?token={query_secrets.ACCESS_TOKEN}" #change to f string
+BASE_URL = f"{ENDPOINT}?token={query_secrets.ACCESS_TOKEN}" 
 
-def works_per_license():
-    licenses = [
-        "CC",
-        "CC-BY",
-        "CC-BY-NC",
-        "CC-BY-NC-ND",
-        "CC-BY-NC-SA",
-        "CC-BY-ND",
-        "CC-BY-SA",
-        "CC-BY-ND" # no longer available?
+def get_license_list():
+    """Returns list of licenses to query."""
+    return [
+        "cc-nc-sa",
+        "cc-by",
+        "cc-by-sa",
+        "cc-by-nd",
+        "cc-by-nc",
+        "cc-by-nc-sa",
+        "cc-by-nc-nd"
     ]
-    
-    
+
+def get_license_total_count(license):
+    """Returns total items for a license."""
+    count = 0
+    response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=0')
+    root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
+    for i in root.iter('oersearchresults'):
+        count = i.attrib['total-items']
+    return count
+
 
 def test_access():
     """Tests endpoint by filtering under cc-by license."""
-    response = requests.get(f'{BASE_URL}&f.license=cc-by&batch_size=10') # change to f string
+    response = requests.get(f'{BASE_URL}&f.license=cc-by&batch_size=10') 
     print(response.status_code)
     with open('data.xml', 'w') as f:
         print(type(response.text))
@@ -48,7 +56,8 @@ def test_xml_parse():
 
 def main():
     # test_access()
-    test_xml_parse()
+    # test_xml_parse()
+    print(get_license_total_count('cc-by'))
 
 if __name__ == "__main__":
     main()

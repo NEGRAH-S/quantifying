@@ -41,8 +41,10 @@ def test_xml_parse():
     """Tests getting elements from XML."""
     tree = ET.parse('data.xml')
     root = tree.getroot()
-    license_total = root.find('oersearchresults')
-    print(license_total)
+    # Gets license total
+    for i in root.iter('oersearchresults'):
+        print(i.attrib['total-items'])
+
 
 def main():
     # test_access()

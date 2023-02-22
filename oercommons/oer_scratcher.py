@@ -29,13 +29,28 @@ def get_license_total_count(license):
     """Returns total items for a license."""
     response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=0')
     root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
+    print("Success")
     return root.attrib['total-items']
 
 
+def get_all_license_count():
+    """Saves total license count to disk."""
+    license_lst = get_license_list()
+    license_count = []
+    for lcs in license_lst:
+        license_count.append(get_license_total_count(lcs))
+    with open("license_counts.csv", 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(license_lst)
+        writer.writerow(license_count)
+
+
 def batch_retrieve(license, batch_start, writer):
-    """Returns ET object with the next 10 results."""
+    """Returns ET object with the next 50 results."""
     response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=50&batch_start={batch_start}')
     root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
+    # for child in root:
+
     # TODO: parse and write to file
 
 
@@ -85,13 +100,19 @@ def test_xml_parse():
     # Gets license total
     for i in root.iter('result'):
         print(i.attrib['total-items'])
+    # for item in root:
+    #     for attribute in item:
+            # for 
+            # print(child.find('modification_date').text)
+            # print(child.tag, child.attrib)
 
 
 def main():
-    test_access()
+    # test_access()
     # test_xml_parse()
     # print(get_license_total_count('cc-by'))
     # record_all_licenses()
+    get_all_license_count()
 
 if __name__ == "__main__":
     main()

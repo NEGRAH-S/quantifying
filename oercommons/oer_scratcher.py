@@ -77,16 +77,12 @@ def batch_retrieve(license, batch_start, writer):
                     temp[item.attrib['title']] = item.attrib['value']
             writer.writerow([license] + [date] + list(temp.values()))
 
-    # TODO: parse and write to file
-
 
 def record_license_data(license, total, writer):
     """Retrieve all data for a license."""
     current_index = 0
-    # TODO: don't run yet, only test smaller batches
-    # while current_index < total:
     # TODO: for testing purposes
-    while current_index < 100:
+    while current_index < 100: # actual: while current_index < total
         batch_retrieve(license, current_index, writer)
         current_index += 50
 
@@ -101,8 +97,8 @@ def record_all_licenses():
             "Material Type", "Media Format", "Languages", "Primary User", 
             "Educational Use", "modification_date"])
         # TODO: don't run yet, only test smaller batches
-        # for license_type in license_list:
-        #     record_license_data(license_type, writer)
+        # for x in range(0, len[license_list]:
+        #     record_license_data(license_type[x], license_count[x], writer)
         # TODO: for testing purposes
         record_license_data(license_list[0], license_count[0], writer)
 

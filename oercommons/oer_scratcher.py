@@ -16,7 +16,6 @@ BASE_URL = f"{ENDPOINT}?token={query_secrets.ACCESS_TOKEN}"
 def get_license_list():
     """Returns list of licenses to query."""
     return [
-        "cc-nc-sa",
         "cc-by",
         "cc-by-sa",
         "cc-by-nd",
@@ -33,16 +32,22 @@ def get_license_total_count(license):
     return root.attrib['total-items']
 
 
-def get_all_license_count():
+def get_all_license_count(api_usage):
     """Saves total license count to disk."""
-    license_lst = get_license_list()
     license_count = []
-    for lcs in license_lst:
-        license_count.append(get_license_total_count(lcs))
-    with open("license_counts.csv", 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(license_lst)
-        writer.writerow(license_count)
+    if api_usage:
+        license_lst = get_license_list() 
+        for lcs in license_lst:
+            license_count.append(get_license_total_count(lcs))
+        with open("license_counts.csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(license_lst)
+            writer.writerow(license_count)
+    else:
+        with open("license_counts.csv", "r") as file:
+            next(file)
+            license_count = list(map(int, next(file).replace("\n", "").split(',')))
+    return license_count
 
 
 def batch_retrieve(license, batch_start, writer):
@@ -112,7 +117,7 @@ def main():
     # test_xml_parse()
     # print(get_license_total_count('cc-by'))
     # record_all_licenses()
-    get_all_license_count()
+    print(get_all_license_count(False))
 
 if __name__ == "__main__":
     main()

@@ -10,9 +10,12 @@ import requests
 def fetch_data (license_type, session):
     url = (
         r"https://commons.wikimedia.org/w/api.php?"
-        r"action=query&prop=categoryinfo&format=json&titles="
-        f"Category:{license_type}"
+        r"action=query&prop=categoryinfo&format=json"
+        r"&titles=Michigan"
+        # f"Category:{license_type}"
     )
+
+
 
     with session.get(url) as response:
         response.raise_for_status()
@@ -20,6 +23,15 @@ def fetch_data (license_type, session):
         print(search_result)
 
 def main():
+    # Requests configurations
+    max_retries = Retry(
+        # try again after 5, 10, 20, 40, 80 seconds
+        # for specified HTTP status codes
+        total=5,
+        backoff_factor=10,
+        status_forcelist=[403, 408, 429, 500, 502, 503, 504],
+    )
+    
     session = requests.Session()
     license = 'cc-by'
     

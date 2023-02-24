@@ -59,9 +59,8 @@ def batch_retrieve(license, batch_start, writer):
     # TODO: parse and write to file
 
 
-def record_license_data(license, writer):
+def record_license_data(license, total, writer):
     """Retrieve all data for a license."""
-    total = get_license_total_count(license)
     current_index = 0
     # TODO: don't run yet, only test smaller batches
     # while current_index < total:
@@ -74,16 +73,17 @@ def record_license_data(license, writer):
 def record_all_licenses():
     """Records the data of all license types."""
     license_list = get_license_list()
+    license_count = get_all_license_count(False)
     with open('oer.csv', 'w', newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["license", "education_level", "subject_area",
-            "material_type", "media_format", "languages", "primary_user", 
-            "educational_use", "modification_date"])
+        writer.writerow(["license", "Education Level", "Subject Area",
+            "Material Type", "Media Format", "Languages", "Primary User", 
+            "Educational Use", "modification_date"])
         # TODO: don't run yet, only test smaller batches
         # for license_type in license_list:
         #     record_license_data(license_type, writer)
         # TODO: for testing purposes
-        record_license_data(license_list[0], writer)
+        record_license_data(license_list[0], license_count[0], writer)
 
 
 def test_access():
@@ -102,9 +102,33 @@ def test_xml_parse():
     """Tests getting elements from XML."""
     tree = ET.parse('data.xml')
     root = tree.getroot()
-    # Gets license total
-    for i in root.iter('result'):
-        print(i.attrib['total-items'])
+    
+    for result in root:
+        for attribute in result:
+            # Modification Date
+            if (attribute.tag == 'modification_date'):
+                print(attribute.text)
+            # OER Summary
+            if (attribute.tag == 'oersummary'):
+                temp = {
+                    "Education Level": "",
+                    "Subject Area": "",
+                    "Material Type": "",
+                    "Media Format": "",
+                    "Languages": "",
+                    "Primary User": "",
+                    "Educational Use": ""
+                }
+
+                for item in attribute:
+                    if temp.get(item.attrib['title']) is not None:
+                        temp[item.attrib['title']] = item.attrib['value']
+                print(temp)
+
+                    # print(item.tag, item.attrib)
+                    # print(item.attrib['value'])
+        
+            # print(child.tag)
     # for item in root:
     #     for attribute in item:
             # for 
@@ -114,10 +138,10 @@ def test_xml_parse():
 
 def main():
     # test_access()
-    # test_xml_parse()
+    test_xml_parse()
     # print(get_license_total_count('cc-by'))
     # record_all_licenses()
-    print(get_all_license_count(False))
+    # print(get_all_license_count(False))
 
 if __name__ == "__main__":
     main()

@@ -54,7 +54,28 @@ def batch_retrieve(license, batch_start, writer):
     """Returns ET object with the next 50 results."""
     response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=50&batch_start={batch_start}')
     root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
-    # for child in root:
+
+    for result in root:
+        for attribute in result:
+            # Modification Date
+            if attribute.tag == 'modification_date':
+                date = attribute.text
+            # OER Summary Data
+            elif attribute.tag == 'oersummary':
+                temp = {
+                    "Education Level": "",
+                    "Subject Area": "",
+                    "Material Type": "",
+                    "Media Format": "",
+                    "Languages": "",
+                    "Primary User": "",
+                    "Educational Use": ""
+                }
+
+            for item in attribute:
+                if temp.get(item.attrib['title']) is not None:
+                    temp[item.attrib['title']] = item.attrib['value']
+            writer.writerow([license] + [date] + list(temp.values()))
 
     # TODO: parse and write to file
 
@@ -102,12 +123,14 @@ def test_xml_parse():
     """Tests getting elements from XML."""
     tree = ET.parse('data.xml')
     root = tree.getroot()
-    
+
+    row_data = ['cc-by']
     for result in root:
+        id = [result.attrib]
         for attribute in result:
             # Modification Date
             if (attribute.tag == 'modification_date'):
-                print(attribute.text)
+                date = [attribute.text]
             # OER Summary
             if (attribute.tag == 'oersummary'):
                 temp = {
@@ -123,17 +146,8 @@ def test_xml_parse():
                 for item in attribute:
                     if temp.get(item.attrib['title']) is not None:
                         temp[item.attrib['title']] = item.attrib['value']
-                print(temp)
-
-                    # print(item.tag, item.attrib)
-                    # print(item.attrib['value'])
-        
-            # print(child.tag)
-    # for item in root:
-    #     for attribute in item:
-            # for 
-            # print(child.find('modification_date').text)
-            # print(child.tag, child.attrib)
+                
+                print(id + row_data + date + list(temp.values()))
 
 
 def main():

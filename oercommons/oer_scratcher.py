@@ -3,15 +3,22 @@
 This file is dedicated to obtain a .csv record report for Open Education Resources Commons data.
 """
 
+# Standard library
 import csv
 import xml.etree.ElementTree as ET
 import re
-import requests
+import sys
+import traceback
 
+# Third-party
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 import query_secrets
 
+TIMEOUT = 10
 ENDPOINT = "https://www.oercommons.org/api/search"
-BASE_URL = f"{ENDPOINT}?token={query_secrets.ACCESS_TOKEN}" 
+BASE_URL = f"{ENDPOINT}?token={query_secrets.ACCESS_TOKEN}"
 
 def get_license_list():
     """Returns list of licenses to query."""
@@ -24,35 +31,51 @@ def get_license_list():
         "cc-by-nc-nd"
     ]
 
-def get_license_total_count(license):
+def fetch_data(session, params):
+    """Fetch data."""
+    params["token"] = query_secrets.ACCESS_TOKEN
+    with session.get(
+        ENDPOINT,
+        params=params,
+        timeout=TIMEOUT,
+    ) as response:
+        response.raise_for_status()
+        data = ET.fromstring(re.sub(r"&\w*;", "", response.text))
+    return data
+
+def get_license_total_count(session, lcs):
     """Returns total items for a license."""
-    response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=0')
-    root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
-    print("Success")
+    params = {
+        "f.license": lcs,
+        "batch_size": 0
+    }
+    root = fetch_data(session, params)
+    print(lcs, "Done")
     return root.attrib['total-items']
 
 
-def get_all_license_count(api_usage):
+def get_all_license_count(session, api_usage):
     """Saves total license count to disk."""
     license_count = []
     if api_usage:
-        license_lst = get_license_list() 
+        license_lst = get_license_list()
+        print("license list done")
         for lcs in license_lst:
-            license_count.append(get_license_total_count(lcs))
-        with open("license_counts.csv", 'w', newline='') as file:
+            license_count.append(get_license_total_count(session, lcs))
+        with open("license_counts.csv", 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(license_lst)
             writer.writerow(license_count)
     else:
-        with open("license_counts.csv", "r") as file:
+        with open("license_counts.csv", "r", encoding='utf-8') as file:
             next(file)
             license_count = list(map(int, next(file).replace("\n", "").split(',')))
     return license_count
 
 
-def batch_retrieve(license, batch_start, writer):
+def batch_retrieve(lcs, batch_start, writer):
     """Returns ET object with the next 50 results."""
-    response = requests.get(f'{BASE_URL}&f.license={license}&batch_size=50&batch_start={batch_start}')
+    response = requests.get(f'{BASE_URL}&f.license={lcs}&batch_size=50&batch_start={batch_start}')
     root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
 
     for result in root:
@@ -75,32 +98,33 @@ def batch_retrieve(license, batch_start, writer):
             for item in attribute:
                 if temp.get(item.attrib['title']) is not None:
                     temp[item.attrib['title']] = item.attrib['value']
-            writer.writerow([license] + [date] + list(temp.values()))
+            writer.writerow([lcs] + [date] + list(temp.values()))
 
 
-def record_license_data(license, total, writer):
+def record_license_data(lcs, total, writer):
     """Retrieve all data for a license."""
     current_index = 0
-    # TODO: for testing purposes
-    while current_index < 100: # actual: while current_index < total
-        batch_retrieve(license, current_index, writer)
+    # replace total with 100 for testing purposes
+    while current_index < total: 
+        batch_retrieve(lcs, current_index, writer)
         current_index += 50
 
 
 def record_all_licenses():
     """Records the data of all license types."""
     license_list = get_license_list()
+    # pass in True if you want to re-fetch all license counts
     license_count = get_all_license_count(False)
-    with open('oer.csv', 'w', newline="") as file:
+    with open('oer.csv', 'w', newline="", encoding='utf8') as file:
         writer = csv.writer(file)
         writer.writerow(["license", "Education Level", "Subject Area",
             "Material Type", "Media Format", "Languages", "Primary User", 
             "Educational Use", "modification_date"])
-        # TODO: don't run yet, only test smaller batches
-        # for x in range(0, len[license_list]:
-        #     record_license_data(license_type[x], license_count[x], writer)
-        # TODO: for testing purposes
-        record_license_data(license_list[0], license_count[0], writer)
+        # uncomment line below for testing
+        # record_license_data(license_list[0], license_count[0], writer)
+        # don't run below in testing
+        for x in range(0, len(license_list)):
+            record_license_data(license_list[x], license_count[x], writer)
 
 
 def test_access():
@@ -110,9 +134,6 @@ def test_access():
     with open('data.xml', 'w') as f:
         print(type(response.text))
         f.write(re.sub(r"&\w*;", "", response.text))
-    # root = ET.fromstring(re.sub(r"&\w*;", "", response.text))
-    # license_total = root.find('oersearchresults').attrib['total-items']
-    # print(license_total)
 
 
 def test_xml_parse():
@@ -122,13 +143,13 @@ def test_xml_parse():
 
     row_data = ['cc-by']
     for result in root:
-        id = [result.attrib]
+        result_id = [result.attrib]
         for attribute in result:
             # Modification Date
-            if (attribute.tag == 'modification_date'):
+            if attribute.tag == 'modification_date':
                 date = [attribute.text]
             # OER Summary
-            if (attribute.tag == 'oersummary'):
+            if attribute.tag == 'oersummary':
                 temp = {
                     "Education Level": "",
                     "Subject Area": "",
@@ -142,16 +163,33 @@ def test_xml_parse():
                 for item in attribute:
                     if temp.get(item.attrib['title']) is not None:
                         temp[item.attrib['title']] = item.attrib['value']
-                
-                print(id + row_data + date + list(temp.values()))
+
+                print(result_id + row_data + date + list(temp.values()))
 
 
 def main():
-    # test_access()
-    test_xml_parse()
-    # print(get_license_total_count('cc-by'))
+
+    # Requests configurations
+    max_retries = Retry(
+        total=5,
+        backoff_factor=10,
+        status_forcelist=[403, 408, 429, 500, 502, 503, 504],
+    )
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=max_retries))
+    
+    get_all_license_count(session, True)
     # record_all_licenses()
-    # print(get_all_license_count(False))
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit as e:
+        sys.exit(e.code)
+    except KeyboardInterrupt:
+        print("INFO (130) Halted via KeyboardInterrupt.", file=sys.stderr)
+        sys.exit(130)
+    except Exception:
+        print("ERROR (1) Unhandled exception:", file=sys.stderr)
+        print(traceback.print_exc(), file=sys.stderr)
+        sys.exit(1)

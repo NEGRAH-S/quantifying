@@ -11,6 +11,7 @@ import re
 import sys
 import traceback
 import xml.etree.ElementTree as ET
+# import lxml.etree as ET
 
 # Third-party
 import query_secrets
@@ -44,9 +45,13 @@ def fetch_data(session, params):
         params=params,
         timeout=TIMEOUT,
     ) as response:
-        response.raise_for_status()
-        data = ET.fromstring(re.sub(r"&\w*;", "", response.text))
-    return data
+        try:
+            response.raise_for_status()
+            data = ET.fromstring(re.sub(r"&\w*;", "", response.text))
+            return data
+        except:
+            print("Error with params: " + params)
+            return None
 
 
 def get_license_total_count(session, lcs):
@@ -90,6 +95,8 @@ def batch_retrieve(session, lcs, batch_start, writer):
     """Returns ET object with the next 50 results."""
     params = {"f.license": lcs, "batch_size": 50, "batch_start": batch_start}
     root = fetch_data(session, params)
+    if root is None:
+        return
     for result in root:
         date = None
         temp = {}

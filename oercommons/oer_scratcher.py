@@ -86,9 +86,9 @@ def batch_retrieve(session, lcs, batch_start, writer):
     params = {"f.license": lcs, "batch_size": 50, "batch_start": batch_start}
     root = fetch_data(session, params)
     for result in root:
+        date = None
+        temp = {}
         for attribute in result:
-            date = None
-            temp = {}
             # Modification Date
             if attribute.tag == "modification_date":
                 date = attribute.text
@@ -106,7 +106,7 @@ def batch_retrieve(session, lcs, batch_start, writer):
             for item in attribute:
                 if ("title" in item.attrib) and ("value" in item.attrib):
                     temp[item.attrib["title"]] = item.attrib["value"]
-            writer.writerow([lcs] + [date] + list(temp.values()))
+        writer.writerow([lcs] + [date] + list(temp.values()))
 
 
 def record_license_data(session, lcs, total, writer):

@@ -67,13 +67,13 @@ def get_all_license_count(session, api_usage):
             print("starting" + lcs)
             license_count.append(get_license_total_count(session, lcs))
         with open(
-            "license_counts.csv", "w", newline="", encoding="utf-8"
+            os.path.join(CWD, "license_counts.csv"), "w", newline="", encoding="utf-8"
         ) as file:
             writer = csv.writer(file)
             writer.writerow(license_lst)
             writer.writerow(license_count)
     else:
-        with open("license_counts.csv", "r", encoding="utf-8") as file:
+        with open(os.path.join(CWD, "license_counts.csv"), "r", encoding="utf-8") as file:
             next(file)
             license_count = list(
                 map(int, next(file).replace("\n", "").split(","))
@@ -124,7 +124,7 @@ def record_all_licenses(session):
     license_list = get_license_list()
     # pass in True if you want to re-fetch all license counts
     license_count = get_all_license_count(session, False)
-    with open("oer.csv", "w", newline="", encoding="utf8") as file:
+    with open(os.path.join(CWD, "oer.csv"), "w", newline="", encoding="utf8") as file:
         writer = csv.writer(file)
         writer.writerow(
             [
@@ -150,14 +150,14 @@ def test_access():
     """Tests endpoint by filtering under cc-by license."""
     response = requests.get(f"{BASE_URL}&f.license=cc-by&batch_size=50")
     print(response.status_code)
-    with open("data.xml", "w") as f:
+    with open(os.path.join(CWD, "data.xml"), "w") as f:
         print(type(response.text))
         f.write(re.sub(r"&\w*;", "", response.text))
 
 
 def test_xml_parse():
     """Tests getting elements from XML."""
-    tree = ET.parse("data.xml")
+    tree = ET.parse(os.path.join(CWD, "data.xml"))
     root = tree.getroot()
 
     row_data = ["cc-by"]

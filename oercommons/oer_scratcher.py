@@ -67,13 +67,18 @@ def get_all_license_count(session, api_usage):
             print("starting" + lcs)
             license_count.append(get_license_total_count(session, lcs))
         with open(
-            os.path.join(CWD, "license_counts.csv"), "w", newline="", encoding="utf-8"
+            os.path.join(CWD, "license_counts.csv"),
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerow(license_lst)
             writer.writerow(license_count)
     else:
-        with open(os.path.join(CWD, "license_counts.csv"), "r", encoding="utf-8") as file:
+        with open(
+            os.path.join(CWD, "license_counts.csv"), "r", encoding="utf-8"
+        ) as file:
             next(file)
             license_count = list(
                 map(int, next(file).replace("\n", "").split(","))
@@ -113,7 +118,7 @@ def record_license_data(session, lcs, total, writer):
     """Retrieve all data for a license."""
     current_index = 0
     # replace total with 100 for testing purposes
-    while current_index < 100:
+    while current_index < total:
         batch_retrieve(session, lcs, current_index, writer)
         print(lcs + " batch starting at " + str(current_index) + " complete.")
         current_index += 50
@@ -124,7 +129,9 @@ def record_all_licenses(session):
     license_list = get_license_list()
     # pass in True if you want to re-fetch all license counts
     license_count = get_all_license_count(session, False)
-    with open(os.path.join(CWD, "oer.csv"), "w", newline="", encoding="utf8") as file:
+    with open(
+        os.path.join(CWD, "oer.csv"), "w", newline="", encoding="utf8"
+    ) as file:
         writer = csv.writer(file)
         writer.writerow(
             [
@@ -140,10 +147,14 @@ def record_all_licenses(session):
             ]
         )
         # uncomment line below for testing
-        record_license_data(session, license_list[0], license_count[0], writer)
+        # record_license_data(
+        #     session, license_list[0], license_count[0], writer
+        #     )
         # don't run below in testing
-        # for x in range(0, len(license_list)):
-        #     record_license_data(session, license_list[x], license_count[x], writer)
+        for x in range(0, len(license_list)):
+            record_license_data(
+                session, license_list[x], license_count[x], writer
+            )
 
 
 def test_access():
@@ -181,7 +192,7 @@ def test_xml_parse():
 
                 for item in attribute:
                     if temp.get(item.attrib["title"]) is not None:
-                        temp[item.attrib["title"]] = item.attrib["value"]
+                        temp[item.attrib["title"]] = item.attrib["value"].replace(',', ' ')
 
                 print(result_id + row_data + date + list(temp.values()))
 

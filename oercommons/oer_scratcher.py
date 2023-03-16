@@ -113,10 +113,10 @@ def batch_retrieve(session, lcs, batch_start, writer):
                     "Media Format": "",
                     "Languages": "",
                     "Primary User": "",
-                    "Educational Use": "",
+                    "Educational Use": ""
                 }
             for item in attribute:
-                if ("title" in item.attrib) and ("value" in item.attrib):
+                if ("title" in item.attrib) and ("value" in item.attrib) and item.attrib["title"] in temp:
                     temp[item.attrib["title"]] = item.attrib["value"]
         writer.writerow([lcs] + [date] + list(temp.values()))
 
@@ -194,7 +194,7 @@ def test_xml_parse():
                     "Media Format": "",
                     "Languages": "",
                     "Primary User": "",
-                    "Educational Use": "",
+                    "Educational Use": ""
                 }
 
                 for item in attribute:

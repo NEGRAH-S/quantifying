@@ -50,7 +50,7 @@ def fetch_data(session, params):
             data = ET.fromstring(re.sub(r"&\w*;", "", response.text))
             return data
         except:
-            print("Error with params: " + params)
+            print("Error with params: " + str(params))
             return None
 
 
@@ -125,7 +125,7 @@ def record_license_data(session, lcs, total, writer):
     """Retrieve all data for a license."""
     current_index = 0
     # replace total with 100 for testing purposes
-    while current_index < 100:
+    while current_index < total:
         batch_retrieve(session, lcs, current_index, writer)
         print(lcs + " batch starting at " + str(current_index) + " complete.")
         current_index += 50
@@ -154,14 +154,14 @@ def record_all_licenses(session):
             ]
         )
         # uncomment line below for testing
-        record_license_data(
-            session, license_list[0], license_count[0], writer
-            )
-        # don't run below in testing
-        # for x in range(0, len(license_list)):
-        #     record_license_data(
-        #         session, license_list[x], license_count[x], writer
+        # record_license_data(
+        #     session, license_list[0], license_count[0], writer
         #     )
+        # don't run below in testing
+        for x in range(0, len(license_list)):
+            record_license_data(
+                session, license_list[x], license_count[x], writer
+            )
 
 
 def test_access():

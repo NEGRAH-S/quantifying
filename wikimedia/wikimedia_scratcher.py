@@ -2,6 +2,7 @@
 import os
 import sys
 import traceback
+# import pandas as pd
 
 # Third-Party Libary
 import requests
@@ -44,7 +45,9 @@ def get_categorymembers (license_type, session):
     return category_members
 
 def get_image_timestamp_list (image_list, session):
-    year_dict = {}
+    year_dict = {2004: 0, 2005: 0, 2006: 0, 2007: 0, 2008: 0, 2009: 0, 2010: 0,
+                 2011: 0, 2012: 0, 2013: 0, 2014: 0, 2015: 0, 2016: 0, 2017: 0,
+                 2020: 0, 2021: 0, 2022: 0, 2023: 0}
 
     for member in image_list:
         image_url = get_imageinfo(member[1])
@@ -53,19 +56,30 @@ def get_image_timestamp_list (image_list, session):
             image_result = response.json()
 
         year = str(image_result["query"]["pages"][str(member[0])]["imageinfo"][0]["timestamp"])[0:4]
-        if year in year_dict:
-            year_dict[year] += 1 
-        else:
-            year_dict[year] = 1
-    print(year_dict)    
-    return year_dict
         
+        year_dict[int(year)] += 1 
+
+    print(year_dict)    
+    
+    return year_dict
 
 # def set_up_data_file():
 #     """Writes the header row to file to contain WikiCommons Query data."""
 #     header_title = "LICENSE TYPE,File Count,Page Count\n"
 #     with open(DATA_WRITE_FILE, "w") as f:
 #         f.write(header_title)
+
+# def write_file (license, year_dict):
+#     data_log = (
+#         f"{license},"
+#         f"{year_dict[2004]},{year_dict[2005]}, {year_dict[2006]}, {year_dict[2007]},"
+#         f"{year_dict[2008]},{year_dict[2009]}, {year_dict[2010]}, {year_dict[2011]},"
+#         f"{year_dict[2012]},{year_dict[2013]}, {year_dict[2014]}, {year_dict[2015]},"
+#         f"{year_dict[2016]},{year_dict[2017]}, {year_dict[2018]}, {year_dict[2019]},"
+#         f"{year_dict[2020]},{year_dict[2021]}, {year_dict[2022]}, {year_dict[2023]}")
+    
+#     with open(DATA_WRITE_FILE, "w") as f:
+# #         f.write(header_title) 
         
 
 
@@ -80,11 +94,16 @@ def main():
     )
     
     session = requests.Session()
-    license_list = 'cc-by'
-    # set_up_data_file()
     
-    images = get_categorymembers(license_list, session)
-    get_image_timestamp_list(images, session)
+    # license_list = pd.read_csv("license_list.csv")
+    # set_up_data_file()
+    # for license in license_list:
+    license = "cc-by"
+    images = get_categorymembers(license, session)
+    image_time_info = get_image_timestamp_list(images, session)
+
+        # write_file(licence, image_time_info)
+
 
     print('Complete')
 

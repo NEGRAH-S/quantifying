@@ -134,6 +134,7 @@ def get_license_contents(license, session):
         with session.get(request_url) as response:
             response.raise_for_status()
             search_data = response.json()
+        print(search_data)
         file_cnt = 0
         page_cnt = 0
         for id in search_data["query"]["pages"]:

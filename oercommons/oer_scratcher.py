@@ -139,18 +139,18 @@ def record_all_licenses(session):
     with open(
         os.path.join(CWD, "oer.csv"), "w", newline="", encoding="utf8"
     ) as file:
-        writer = csv.writer(file, delimiter=';')
+        writer = csv.writer(file, delimiter='\t')
         writer.writerow(
             [
                 "license",
+                "modification_date",
                 "Education Level",
                 "Subject Area",
                 "Material Type",
                 "Media Format",
                 "Languages",
                 "Primary User",
-                "Educational Use",
-                "modification_date",
+                "Educational Use"
             ]
         )
         # uncomment line below for testing

@@ -100,6 +100,7 @@ def batch_retrieve(session, lcs, batch_start, writer):
     if root is None:
         return
     for result in root:
+        id = result.attrib["id"]
         date = None
         temp = {}
         for attribute in result:
@@ -124,14 +125,14 @@ def batch_retrieve(session, lcs, batch_start, writer):
                     and item.attrib["title"] in temp
                 ):
                     temp[item.attrib["title"]] = item.attrib["value"]
-        writer.writerow([lcs] + [date] + list(temp.values()))
+        writer.writerow([str(id)] + [lcs] + [date] + list(temp.values()))
 
 
 def record_license_data(session, lcs, total, writer):
     """Retrieve all data for a license."""
     current_index = 0
     # replace total with 100 for testing purposes
-    while current_index < total:
+    while current_index < 100:
         batch_retrieve(session, lcs, current_index, writer)
         print(lcs + " batch starting at " + str(current_index) + " complete.")
         current_index += 50
@@ -148,6 +149,7 @@ def record_all_licenses(session):
         writer = csv.writer(file, delimiter="\t")
         writer.writerow(
             [
+                "id",
                 "license",
                 "modification_date",
                 "Education Level",
@@ -160,14 +162,14 @@ def record_all_licenses(session):
             ]
         )
         # uncomment line below for testing
-        # record_license_data(
-        #     session, license_list[0], license_count[0], writer
-        #     )
-        # don't run below in testing
-        for x in range(0, len(license_list)):
-            record_license_data(
-                session, license_list[x], license_count[x], writer
+        record_license_data(
+            session, license_list[0], license_count[0], writer
             )
+        # don't run below in testing
+        # for x in range(0, len(license_list)):
+        #     record_license_data(
+        #         session, license_list[x], license_count[x], writer
+        #     )
 
 
 def test_access():

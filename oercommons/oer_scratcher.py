@@ -11,13 +11,15 @@ import re
 import sys
 import traceback
 import xml.etree.ElementTree as ET
-# import lxml.etree as ET
 
 # Third-party
 import query_secrets
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+
+# import lxml.etree as ET
+
 
 TIMEOUT = 20
 ENDPOINT = "https://www.oercommons.org/api/search"
@@ -113,10 +115,14 @@ def batch_retrieve(session, lcs, batch_start, writer):
                     "Media Format": "",
                     "Languages": "",
                     "Primary User": "",
-                    "Educational Use": ""
+                    "Educational Use": "",
                 }
             for item in attribute:
-                if ("title" in item.attrib) and ("value" in item.attrib) and item.attrib["title"] in temp:
+                if (
+                    ("title" in item.attrib)
+                    and ("value" in item.attrib)
+                    and item.attrib["title"] in temp
+                ):
                     temp[item.attrib["title"]] = item.attrib["value"]
         writer.writerow([lcs] + [date] + list(temp.values()))
 
@@ -139,7 +145,7 @@ def record_all_licenses(session):
     with open(
         os.path.join(CWD, "oer.csv"), "w", newline="", encoding="utf8"
     ) as file:
-        writer = csv.writer(file, delimiter='\t')
+        writer = csv.writer(file, delimiter="\t")
         writer.writerow(
             [
                 "license",
@@ -150,7 +156,7 @@ def record_all_licenses(session):
                 "Media Format",
                 "Languages",
                 "Primary User",
-                "Educational Use"
+                "Educational Use",
             ]
         )
         # uncomment line below for testing
@@ -194,12 +200,14 @@ def test_xml_parse():
                     "Media Format": "",
                     "Languages": "",
                     "Primary User": "",
-                    "Educational Use": ""
+                    "Educational Use": "",
                 }
 
                 for item in attribute:
                     if temp.get(item.attrib["title"]) is not None:
-                        temp[item.attrib["title"]] = item.attrib["value"].replace('"', '')
+                        temp[item.attrib["title"]] = item.attrib[
+                            "value"
+                        ].replace('"', "")
 
                 print(result_id + row_data + date + list(temp.values()))
 
